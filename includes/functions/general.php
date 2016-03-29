@@ -1051,12 +1051,31 @@ function buckys_truncate_string($string, $length, $stripHTML = true){
  * @return mixed
  */
 function buckys_make_links_clickable($text, $targetWindow = '_blank'){
-    return preg_replace(['/(?(?=<a[^>]*>.+<\/a>)
-             (?:<a[^>]*>.+<\/a>)
-             |
-             ([^="\']?)((?:https?|ftp|bf2|):\/\/[^<> \n\r]+)
-         )/iex', '/<a([^>]*)target="?[^"\']+"?/i', '/<a([^>]+)>/i', '/(^|\s)(www.[^<> \n\r]+)/iex', '/(([_A-Za-z0-9-]+)(\\.[_A-Za-z0-9-]+)*@([A-Za-z0-9-]+)
-       (\\.[A-Za-z0-9-]+)*)/iex'], ["stripslashes((strlen('\\2')>0?'\\1<a href=\"\\2\">\\2</a>\\3':'\\0'))", '<a\\1', '<a\\1 target="' . $targetWindow . '">', "stripslashes((strlen('\\2')>0?'\\1<a href=\"//\\2\">\\2</a>\\3':'\\0'))", "stripslashes((strlen('\\2')>0?'<a href=\"mailto:\\0\">\\0</a>':'\\0'))"], $text);
+    if (preg_match_all("#(^|\s|\()((http(s?)://)|(www\.))(\w+[^\s\)\<]+)#i", $text, $matches))
+	{
+		$pop = ($targetWindow == '_blank') ? " target=\"_blank\" " : "";
+
+		for ($i = 0; $i < count($matches['0']); $i++)
+		{
+			$period = '';
+			if (preg_match("|\.$|", $matches['6'][$i]))
+			{
+				$period = '.';
+				$matches['6'][$i] = substr($matches['6'][$i], 0, -1);
+			}
+
+			$text = str_replace($matches['0'][$i],
+								$matches['1'][$i].'<a href="http'.
+								$matches['4'][$i].'://'.
+								$matches['5'][$i].
+								$matches['6'][$i].'"'.$pop.'>http'.
+								$matches['4'][$i].'://'.
+								$matches['5'][$i].
+								$matches['6'][$i].'</a>'.
+								$period, $text);
+		}
+	}
+	return $text;
 }
 
 /**
